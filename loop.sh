@@ -70,7 +70,7 @@ while true; do
     echo "⏱️ [PM 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
     
     # 處理 PM 執行結果
-    if ! claude -p "$(cat .prompts/pm.txt)" --allowedTools "Read,Edit,Write" --model sonnet --max-turns 10; then
+    if ! claude -p "$(cat .prompts/pm.txt)" --allowedTools "Read,Edit,Write" --model sonnet --max-turns 15; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
         continue
