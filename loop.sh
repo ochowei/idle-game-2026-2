@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定義虛擬成員工作後的休息時間 (單位: 秒)
-SLEEP_TIME=20
+SLEEP_TIME=300
 
 echo "🚀 開始啟動虛擬團隊 (PM & Coder) 自動開發迴圈..."
 
