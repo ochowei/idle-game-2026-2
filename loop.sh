@@ -16,7 +16,7 @@ while true; do
     # 執行 Claude Code CLI 處理 PM 工作
     # (註：請確認你的 claude cli 接受 stdin 或特定參數來傳遞 prompt。
     # 以下使用常見的 "-p" 參數格式，若你的 CLI 支援直接吃檔案，請改為對應語法，例如 claude -p "$(cat .prompts/pm.txt)")
-    claude -p "$(cat .prompts/pm.txt)"
+    claude -p "$(cat .prompts/pm.txt)" --allowedTools "Bash(git *),Read,Edit,Write"
     
     echo "⏳ PM 工作完成，休息 ${SLEEP_TIME} 秒避免 API Rate Limit..."
     sleep $SLEEP_TIME
@@ -25,7 +25,7 @@ while true; do
     echo "💻 [Coder] 正在讀取 CURRENT_TASK.md 並執行開發工作..."
     
     # 執行 Claude Code CLI 處理 Coder 工作
-    claude -p "$(cat .prompts/coder.txt)"
+    claude -p "$(cat .prompts/coder.txt)" --allowedTools "Bash(git *),Read,Edit,Write"
     
     echo "⏳ Coder 實作完成，休息 ${SLEEP_TIME} 秒避免 API Rate Limit..."
     sleep $SLEEP_TIME
