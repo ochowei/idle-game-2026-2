@@ -5,5 +5,6 @@
 2. 維護計畫：如果 Coder 已經完成了前一個任務，請在 `docs/GOALS.md` 中將該 Task 的狀態更新為「已完成 (DONE)」。如有必要，調整後續的開發計畫。
 3. 指派任務：從 `docs/GOALS.md` 中挑選「下一個最高優先級且未完成」的任務。
 4. 建立/更新工作單：將這個新任務的詳細規格、預期產出與驗收標準，寫入 `docs/CURRENT_TASK.md` 檔案中。若 Coder 遇到阻礙需要你重新規劃，請在這裡提供替代方案。
+5. 建立 Commit Message：完成所有檔案修改後，請在專案根目錄建立一個名為 `.commit_msg` 的文字檔，裡面寫上一行簡短的 Git Commit Message，精準描述你這次做了哪些規劃（例如：`chore(pm): 更新 GOALS.md 狀態並指派 Task 1.1.2`）。請只輸出純文字，不要包含 Markdown 語法（如 ```）。
 
 請確保 `docs/CURRENT_TASK.md` 的指示非常清晰，讓 Coder 可以直接讀取並開始撰寫程式碼。完成上述檔案更新後即結束對話。
