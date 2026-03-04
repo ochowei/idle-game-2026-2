@@ -3,6 +3,9 @@
 # 定義虛擬成員工作後的休息時間 (單位: 秒)
 SLEEP_TIME=300
 
+# 定義遭遇 API 錯誤或網路中斷時的重試等待時間 (單位: 秒)
+ERROR_SLEEP_TIME=300
+
 # 定義 AI 卡住的判定門檻 (連續幾次沒有變更就視為卡住並跳出)
 STUCK_LIMIT=3 
 CONSECUTIVE_NO_CHANGES=0
@@ -34,7 +37,7 @@ commit_changes() {
     local default_msg=$2
     local commit_msg="$default_msg"
     
-    # 修正：先讀取並移除 .commit_msg，避免被 git add . 加進去
+    # 先讀取並移除 .commit_msg，避免被 git add . 加進去
     if [ -f ".commit_msg" ]; then
         commit_msg=$(cat .commit_msg)
         rm .commit_msg
@@ -68,8 +71,8 @@ while true; do
     
     # 處理 PM 執行結果
     if ! claude -p "$(cat .prompts/pm.txt)" --allowedTools "Bash,Read,Edit,Write"; then
-        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並進入下一輪..."
-        sleep 60  # 稍微等待一下再 continue，避免瘋狂重試
+        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
+        sleep $ERROR_SLEEP_TIME
         continue
     fi
     
@@ -100,8 +103,8 @@ while true; do
     
     # 處理 Coder 執行結果
     if ! claude -p "$(cat .prompts/coder.txt)" --allowedTools "Bash,Read,Edit,Write"; then
-        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Coder 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並進入下一輪..."
-        sleep 60
+        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Coder 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
+        sleep $ERROR_SLEEP_TIME
         continue
     fi
     
