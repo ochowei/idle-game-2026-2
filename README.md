@@ -18,7 +18,7 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 * **👑 人類管理員 (Admin - William)**
     * 負責高階決策與專案初始化。
     * 定義 `.ai/GOALS.md` 中的 Epic 與 Task 優先順序。
-    * 啟動與監控自動化開發迴圈 (`loop.sh`)。
+    * 啟動與監控自動化開發迴圈 (`.ai/loop.sh`)。
 * **👔 專案經理 (PM - Claude)**
     * **職責：** 規劃與管理，不寫程式碼。
     * **行為：** 讀取 `.ai/GOALS.md` 與程式碼變更，更新任務進度（標記 `[DONE]`），並挑選下一個優先任務。
@@ -32,7 +32,7 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 
 ## ⚙️ 運作方式 (How it Works)
 
-本專案的核心驅動引擎是 `loop.sh`。它是一個自動化的 Bash 腳本，透過呼叫 `claude` CLI 來模擬團隊協作。
+本專案的核心驅動引擎是 `.ai/loop.sh`。它是一個自動化的 Bash 腳本，透過呼叫 `claude` CLI 來模擬團隊協作。
 
 ### 🔄 開發迴圈流程
 1. **PM 規劃階段**：腳本載入 `.ai/prompts/pm.txt` 喚醒 PM。PM 分析現狀、更新 `.ai/GOALS.md`，並產出 `.ai/CURRENT_TASK.md`。腳本自動將變更 `git commit`。
@@ -49,14 +49,14 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 
 ## 🛠️ 如何啟動 (Getting Started)
 
-為了避免 `loop.sh` 本身在開發過程中被 AI 誤改，腳本需放置於專案的**上層目錄**來執行。
+為了避免 `.ai/loop.sh` 本身在開發過程中被 AI 誤改，腳本需放置於專案的**上層目錄**來執行。
 
 ### 執行步驟：
 
 1. **配置環境**：確保你的環境已安裝 Node.js、Git 以及 `claude` 官方命令列工具，並已完成 API 驗證。
-2. **複製腳本**：將 `loop.sh` 複製或移動到專案資料夾的上一層目錄。
+2. **複製腳本**：將 `.ai/loop.sh` 複製或移動到專案資料夾的上一層目錄。
     ```bash
-    cp loop.sh ../
+    cp .ai/loop.sh ../
     ```
 3. **進入專案目錄**：確保你當前位於專案根目錄內。
     ```bash
