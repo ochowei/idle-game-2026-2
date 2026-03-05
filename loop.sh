@@ -10,6 +10,10 @@ ERROR_SLEEP_TIME=300
 STUCK_LIMIT=3
 CONSECUTIVE_NO_CHANGES=0
 
+# 定義 PM / Coder 的最大對話輪數
+PM_MAX_TURNS=15
+CODER_MAX_TURNS=30
+
 echo "🚀 開始啟動虛擬團隊 (PM & Coder) 自動開發迴圈..."
 
 # 確保必要目錄存在
@@ -134,11 +138,11 @@ while true; do
     echo "👔 [PM] 正在讀取進度、維護計畫並指派下一個任務..."
     echo "⏱️ [PM 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
-    run_claude "PM" 15 \
+    run_claude "PM" "$PM_MAX_TURNS" \
         -p "$(cat .prompts/pm.txt)" \
         --allowedTools "Read,Edit,Write,Glob,Grep" \
         --model sonnet \
-        --max-turns 15
+        --max-turns "$PM_MAX_TURNS"
     if [ $? -ne 0 ]; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
@@ -183,10 +187,10 @@ while true; do
     echo "⏱️ [Coder 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
     # allowedTools 明確包含 npm/node/npx 相關 Bash 指令
-    run_claude "Coder" 30 \
+    run_claude "Coder" "$CODER_MAX_TURNS" \
         -p "$(cat .prompts/coder.txt)" \
         --allowedTools "Bash(npm install*),Bash(npm run *),Bash(npm test*),Bash(npm ci*),Bash(npx *),Bash(node *),Bash(git status*),Bash(git diff*),Read,Edit,Write,Glob,Grep" \
-        --max-turns 30
+        --max-turns "$CODER_MAX_TURNS"
     if [ $? -ne 0 ]; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Coder 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
