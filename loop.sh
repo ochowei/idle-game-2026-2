@@ -100,6 +100,15 @@ while true; do
 
     echo "⏱️ [PM 結束時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
+    # 檢查 PM 是否正常完成（未被 max-turns 截斷）
+    if [ ! -f "docs/PM_DONE" ]; then
+        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] 未偵測到 docs/PM_DONE，判定 PM 被 max-turns 截斷。回滾所有未 commit 變更並等待 ${ERROR_SLEEP_TIME} 秒後重試..."
+        prepare_clean_env
+        sleep $ERROR_SLEEP_TIME
+        continue
+    fi
+    rm -f docs/PM_DONE  # 清除信號，不讓它進入 commit
+
     # PM 完成後檢查是否需要人類介入
     check_human_needed
 
@@ -137,6 +146,15 @@ while true; do
     fi
 
     echo "⏱️ [Coder 結束時間]: $(date '+%Y-%m-%d %H:%M:%S')"
+
+    # 檢查 Coder 是否正常完成（未被 max-turns 截斷）
+    if [ ! -f "docs/CODER_DONE" ]; then
+        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] 未偵測到 docs/CODER_DONE，判定 Coder 被 max-turns 截斷。回滾所有未 commit 變更並等待 ${ERROR_SLEEP_TIME} 秒後重試..."
+        prepare_clean_env
+        sleep $ERROR_SLEEP_TIME
+        continue
+    fi
+    rm -f docs/CODER_DONE  # 清除信號，不讓它進入 commit
 
     # Coder 完成後檢查是否需要人類介入
     check_human_needed
