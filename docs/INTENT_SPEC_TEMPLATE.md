@@ -3,6 +3,19 @@
 > 每個 `CURRENT_TASK.md` 都應包含以下結構。
 > Intent Spec 的核心思想：先說清楚「為什麼」和「完成長什麼樣子」，再說「怎麼做」。
 
+## 使用原則
+
+這份文件是「**驗收合約**」，不是「實作教學」。
+
+| PM 的職責 | 不屬於 PM 的職責 |
+|----------|----------------|
+| 說清楚任務目標與邊界 | 提供完整程式碼範本 |
+| 列出需要建立/修改的檔案 | 決定每個檔案的實作細節 |
+| 標記非直覺的技術約束 | 解釋技術棧選擇的理由（放 ADR） |
+| 定義可驗證的驗收標準 | 指定套件的精確版本號 |
+
+**原則：如果 Coder 看完任務單後不需要做任何設計決策，表示這份文件過度詳細。**
+
 ---
 
 ## 任務：[Task ID] [任務名稱]
@@ -51,29 +64,30 @@
 
 ### 需要安裝的套件
 
+> 注意：npm install 無法在 Claude Code sandbox 環境中執行，需由管理員手動執行。
+
 ```bash
 npm install zustand          # 狀態管理
 npm install -D @types/node   # TypeScript 型別
 ```
 
-### 程式碼範本
+### 關鍵約束 (Key Constraints)
 
-```typescript
-// src/store/gameStore.ts 範本
-import { create } from 'zustand'
+> **只在這裡記錄非直覺、容易出錯的技術要求。**
+> 標準的實作細節由 Coder 自行決定，不需要在這裡重複。
+>
+> 適合放這裡的內容：
+> - 特定格式要求（如：ESLint 9 必須用 flat config，不能用舊版 `.eslintrc`）
+> - 非預設行為（如：tsconfig 要用三個 reference 結構，不是單一檔案）
+> - 已知的陷阱（如：`createRoot` 需要 `!` 斷言，否則 TypeScript strict 會報錯）
+>
+> 不適合放這裡的內容：
+> - 完整程式碼範本（Coder 應自行實作）
+> - 技術棧選擇的理由（放在 ADR 或 GOALS.md）
+> - 套件的精確版本號（只指定主要版本）
 
-interface GameState {
-  resources: number
-  addResources: (amount: number) => void
-}
-
-export const useGameStore = create<GameState>((set) => ({
-  resources: 0,
-  addResources: (amount) => set((state) => ({
-    resources: state.resources + amount
-  })),
-}))
-```
+範例：
+- `gameStore.ts` 使用 Zustand，state 介面必須定義在獨立的 `interface GameState` 中，不要用 inline type
 
 ---
 
