@@ -1,7 +1,7 @@
 .claude/worktrees/
 .commit_msg
-docs/PM_DONE
-docs/CODER_DONE
+.virtual-team/PM_DONE
+.virtual-team/CODER_DONE
 
 # npm sandbox 重導向目錄（由 .npmrc prefix/cache 設定產生）
 .npm-global/
