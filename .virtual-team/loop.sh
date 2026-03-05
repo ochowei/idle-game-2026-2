@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# 防呆：避免從 .virtual-team/ 資料夾內部執行
+if [ "$(basename "$(pwd)")" = ".virtual-team" ]; then
+    echo "ERROR: 請勿從 .virtual-team/ 內部執行本腳本。"
+    echo "請先複製到上層目錄再執行：cp .virtual-team/loop.sh ../"
+    exit 1
+fi
+
 # 定義虛擬成員工作後的休息時間 (單位: 秒)
 SLEEP_TIME=600
 
@@ -17,14 +24,15 @@ CODER_MAX_TURNS=65
 echo "🚀 開始啟動虛擬團隊 (PM & Coder) 自動開發迴圈..."
 
 # 確保必要目錄存在
-mkdir -p .ai/prompts
+mkdir -p .virtual-team/prompts
 
 # 確保當前目錄已經是 Git 儲存庫，若無則初始化
 if [ ! -d ".git" ]; then
     echo "📦 尚未偵測到 Git 儲存庫，正在初始化..."
     git init
     git add .
-    git commit -m "chore: initial commit for idle-game-2026-2"
+    PROJECT_NAME=$(basename "$(pwd)")
+    git commit -m "chore: initial commit for $PROJECT_NAME"
 fi
 
 # 定義清理環境的函式
@@ -60,18 +68,18 @@ commit_changes() {
 
 # 檢查是否有 HUMAN_NEEDED.md，若有則暫停並通知人類
 check_human_needed() {
-    if [ -f ".ai/HUMAN_NEEDED.md" ]; then
+    if [ -f ".virtual-team/HUMAN_NEEDED.md" ]; then
         echo ""
         echo "🆘 ============================================================"
         echo "🆘 [$(date '+%Y-%m-%d %H:%M:%S')] AI 團隊請求人類協助！"
-        echo "🆘 請查看 .ai/HUMAN_NEEDED.md 了解需要協助的內容："
+        echo "🆘 請查看 .virtual-team/HUMAN_NEEDED.md 了解需要協助的內容："
         echo "🆘 ============================================================"
         echo ""
-        cat .ai/HUMAN_NEEDED.md
+        cat .virtual-team/HUMAN_NEEDED.md
         echo ""
         echo "🆘 ============================================================"
         echo "🆘 自動開發迴圈已暫停。請解決上述問題後，"
-        echo "🆘 刪除 .ai/HUMAN_NEEDED.md 再重新執行 .ai/loop.sh（或其副本）。"
+        echo "🆘 刪除 .virtual-team/HUMAN_NEEDED.md 再重新執行 .virtual-team/loop.sh（或其副本）。"
         echo "🆘 ============================================================"
         exit 1
     fi
@@ -126,9 +134,9 @@ while true; do
     # 每次迴圈開始前先檢查是否有待處理的人類協助請求
     check_human_needed
 
-    # 檢查是否所有目標都已完成 (.ai/GOALS.md 中沒有 [TODO] 且沒有 [IN PROGRESS])
-    if ! grep -q "\[TODO\]\|\[IN PROGRESS\]" .ai/GOALS.md; then
-        echo "🎉 [$(date '+%Y-%m-%d %H:%M:%S')] 偵測到 .ai/GOALS.md 中的任務已全數完成！結束自動開發迴圈。"
+    # 檢查是否所有目標都已完成 (.virtual-team/GOALS.md 中沒有 [TODO] 且沒有 [IN PROGRESS])
+    if ! grep -q "\[TODO\]\|\[IN PROGRESS\]" .virtual-team/GOALS.md; then
+        echo "🎉 [$(date '+%Y-%m-%d %H:%M:%S')] 偵測到 .virtual-team/GOALS.md 中的任務已全數完成！結束自動開發迴圈。"
         break
     fi
 
@@ -138,7 +146,7 @@ while true; do
     echo "⏱️ [PM 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
     run_claude "PM" "$PM_MAX_TURNS" \
-        -p "$(cat .ai/prompts/pm.txt)" \
+        -p "$(cat .virtual-team/prompts/pm.txt)" \
         --allowedTools "Read,Edit,Write,Glob,Grep" \
         --model sonnet \
         --max-turns "$PM_MAX_TURNS"
@@ -151,13 +159,13 @@ while true; do
     echo "⏱️ [PM 結束時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
     # 檢查 PM 是否正常完成（未被 max-turns 截斷）
-    if [ ! -f ".ai/PM_DONE" ]; then
-        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] 未偵測到 .ai/PM_DONE，判定 PM 被 max-turns 截斷。回滾所有未 commit 變更並等待 ${ERROR_SLEEP_TIME} 秒後重試..."
+    if [ ! -f ".virtual-team/PM_DONE" ]; then
+        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] 未偵測到 .virtual-team/PM_DONE，判定 PM 被 max-turns 截斷。回滾所有未 commit 變更並等待 ${ERROR_SLEEP_TIME} 秒後重試..."
         prepare_clean_env
         sleep $ERROR_SLEEP_TIME
         continue
     fi
-    rm -f .ai/PM_DONE  # 清除信號，不讓它進入 commit
+    rm -f .virtual-team/PM_DONE  # 清除信號，不讓它進入 commit
 
     # PM 完成後檢查是否需要人類介入
     check_human_needed
@@ -187,7 +195,7 @@ while true; do
 
     # allowedTools 明確包含 npm/node/npx 相關 Bash 指令
     run_claude "Coder" "$CODER_MAX_TURNS" \
-        -p "$(cat .ai/prompts/coder.txt)" \
+        -p "$(cat .virtual-team/prompts/coder.txt)" \
         --allowedTools "Bash(npm install*),Bash(npm run *),Bash(npm test*),Bash(npm ci*),Bash(npx *),Bash(node *),Bash(git status*),Bash(git diff*),Read,Edit,Write,Glob,Grep" \
         --max-turns "$CODER_MAX_TURNS"
     if [ $? -ne 0 ]; then
@@ -199,13 +207,13 @@ while true; do
     echo "⏱️ [Coder 結束時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
     # 檢查 Coder 是否正常完成（未被 max-turns 截斷）
-    if [ ! -f ".ai/CODER_DONE" ]; then
-        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] 未偵測到 .ai/CODER_DONE，判定 Coder 被 max-turns 截斷。回滾所有未 commit 變更並等待 ${ERROR_SLEEP_TIME} 秒後重試..."
+    if [ ! -f ".virtual-team/CODER_DONE" ]; then
+        echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] 未偵測到 .virtual-team/CODER_DONE，判定 Coder 被 max-turns 截斷。回滾所有未 commit 變更並等待 ${ERROR_SLEEP_TIME} 秒後重試..."
         prepare_clean_env
         sleep $ERROR_SLEEP_TIME
         continue
     fi
-    rm -f .ai/CODER_DONE  # 清除信號，不讓它進入 commit
+    rm -f .virtual-team/CODER_DONE  # 清除信號，不讓它進入 commit
 
     # Coder 完成後檢查是否需要人類介入
     check_human_needed
