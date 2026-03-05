@@ -74,6 +74,49 @@ check_human_needed() {
     fi
 }
 
+# 執行 claude 並於結束後顯示使用的 turn 數量
+# 用法: run_claude <角色名稱> <max_turns> <claude 的其餘參數...>
+# 回傳值: claude 的 exit code
+run_claude() {
+    local role="$1"
+    local max_turns="$2"
+    shift 2
+
+    # 若 jq 不可用，退回到一般輸出模式（無 turn 計數）
+    if ! command -v jq &>/dev/null; then
+        echo "⚠️  [${role}] 未偵測到 jq，以一般模式執行（無 turn 計數）"
+        claude "$@"
+        return $?
+    fi
+
+    local stream_log
+    stream_log=$(mktemp /tmp/claude_stream_XXXXXX.jsonl)
+
+    # 以 stream-json 輸出，同時 tee 到暫存檔，並即時萃取文字顯示
+    claude "$@" --output-format stream-json \
+        | tee "$stream_log" \
+        | jq -rj 'if .type == "content_block_delta" and .delta.type == "text_delta"
+                  then .delta.text
+                  else empty
+                  end' 2>/dev/null
+    local exit_code=${PIPESTATUS[0]}
+
+    # 優先從 result 事件取 num_turns，fallback 到計算 message_start 數量
+    local turn_count
+    turn_count=$(grep '"type":"result"' "$stream_log" \
+        | jq -r '.num_turns // empty' 2>/dev/null | head -1)
+    if [ -z "$turn_count" ]; then
+        turn_count=$(grep -c '"type":"message_start"' "$stream_log" 2>/dev/null || echo "?")
+    fi
+
+    rm -f "$stream_log"
+
+    echo ""
+    echo "ℹ️  [${role}] 共使用 ${turn_count} / ${max_turns} turns"
+
+    return $exit_code
+}
+
 while true; do
     echo "=================================================="
 
@@ -91,8 +134,12 @@ while true; do
     echo "👔 [PM] 正在讀取進度、維護計畫並指派下一個任務..."
     echo "⏱️ [PM 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
-    # 處理 PM 執行結果
-    if ! claude -p "$(cat .prompts/pm.txt)" --allowedTools "Read,Edit,Write,Glob,Grep" --model sonnet --max-turns 15; then
+    run_claude "PM" 15 \
+        -p "$(cat .prompts/pm.txt)" \
+        --allowedTools "Read,Edit,Write,Glob,Grep" \
+        --model sonnet \
+        --max-turns 15
+    if [ $? -ne 0 ]; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
         continue
@@ -135,11 +182,12 @@ while true; do
     echo "💻 [Coder] 正在讀取 CURRENT_TASK.md 並執行開發工作..."
     echo "⏱️ [Coder 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
-    # 處理 Coder 執行結果
     # allowedTools 明確包含 npm/node/npx 相關 Bash 指令
-    if ! claude -p "$(cat .prompts/coder.txt)" \
+    run_claude "Coder" 30 \
+        -p "$(cat .prompts/coder.txt)" \
         --allowedTools "Bash(npm install*),Bash(npm run *),Bash(npm test*),Bash(npm ci*),Bash(npx *),Bash(node *),Bash(git status*),Bash(git diff*),Read,Edit,Write,Glob,Grep" \
-        --max-turns 30; then
+        --max-turns 30
+    if [ $? -ne 0 ]; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Coder 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
         continue
