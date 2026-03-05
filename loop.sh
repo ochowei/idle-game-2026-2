@@ -14,7 +14,11 @@ CONSECUTIVE_NO_CHANGES=0
 PM_MAX_TURNS=45
 CODER_MAX_TURNS=65
 
+# LLM 提供者設定（claude 或 gemini）
+LLM_PROVIDER=${LLM_PROVIDER:-claude}
+
 echo "🚀 開始啟動虛擬團隊 (PM & Coder) 自動開發迴圈..."
+echo "🤖 LLM Provider: ${LLM_PROVIDER}"
 
 # 確保必要目錄存在
 mkdir -p docs
@@ -78,18 +82,42 @@ check_human_needed() {
     fi
 }
 
-# 執行 claude 並於結束後顯示使用的 turn 數量
-# 用法: run_claude <角色名稱> <max_turns> <claude 的其餘參數...>
-# 回傳值: claude 的 exit code
-run_claude() {
+# 依照 LLM_PROVIDER 執行對應 CLI。
+# 用法: run_llm <角色名稱> <max_turns> <prompt> <model> [allowed_tools]
+# 回傳值: CLI 的 exit code
+run_llm() {
     local role="$1"
     local max_turns="$2"
-    shift 2
+    local prompt="$3"
+    local model="$4"
+    local allowed_tools="$5"
+
+    if [ "$LLM_PROVIDER" = "gemini" ]; then
+        # Gemini CLI 目前不保證支援 Claude 的 turn 統計事件，故以一般模式執行。
+        local gemini_args=("-p" "$prompt")
+        if [ -n "$model" ]; then
+            gemini_args+=("--model" "$model")
+        fi
+
+        # 允許透過環境變數注入額外參數，例如 sandbox / approval 設定。
+        # shellcheck disable=SC2206
+        local gemini_extra_args=(${GEMINI_EXTRA_ARGS:-})
+        gemini "${gemini_args[@]}" "${gemini_extra_args[@]}"
+        return $?
+    fi
+
+    local claude_args=("-p" "$prompt" "--max-turns" "$max_turns")
+    if [ -n "$allowed_tools" ]; then
+        claude_args+=("--allowedTools" "$allowed_tools")
+    fi
+    if [ -n "$model" ]; then
+        claude_args+=("--model" "$model")
+    fi
 
     # 若 jq 不可用，退回到一般輸出模式（無 turn 計數）
     if ! command -v jq &>/dev/null; then
         echo "⚠️  [${role}] 未偵測到 jq，以一般模式執行（無 turn 計數）"
-        claude "$@"
+        claude "${claude_args[@]}"
         return $?
     fi
 
@@ -97,7 +125,7 @@ run_claude() {
     stream_log=$(mktemp /tmp/claude_stream_XXXXXX.jsonl)
 
     # 以 stream-json 輸出，同時 tee 到暫存檔，並即時萃取文字顯示
-    claude "$@" --output-format stream-json --verbose \
+    claude "${claude_args[@]}" --output-format stream-json --verbose \
         | tee "$stream_log" \
         | jq -rj 'if .type == "content_block_delta" and .delta.type == "text_delta"
                   then .delta.text
@@ -138,11 +166,10 @@ while true; do
     echo "👔 [PM] 正在讀取進度、維護計畫並指派下一個任務..."
     echo "⏱️ [PM 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
-    run_claude "PM" "$PM_MAX_TURNS" \
-        -p "$(cat .prompts/pm.txt)" \
-        --allowedTools "Read,Edit,Write,Glob,Grep" \
-        --model sonnet \
-        --max-turns "$PM_MAX_TURNS"
+    run_llm "PM" "$PM_MAX_TURNS" \
+        "$(cat .prompts/pm.txt)" \
+        "${PM_MODEL:-sonnet}" \
+        "Read,Edit,Write,Glob,Grep"
     if [ $? -ne 0 ]; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
@@ -187,10 +214,10 @@ while true; do
     echo "⏱️ [Coder 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
 
     # allowedTools 明確包含 npm/node/npx 相關 Bash 指令
-    run_claude "Coder" "$CODER_MAX_TURNS" \
-        -p "$(cat .prompts/coder.txt)" \
-        --allowedTools "Bash(npm install*),Bash(npm run *),Bash(npm test*),Bash(npm ci*),Bash(npx *),Bash(node *),Bash(git status*),Bash(git diff*),Read,Edit,Write,Glob,Grep" \
-        --max-turns "$CODER_MAX_TURNS"
+    run_llm "Coder" "$CODER_MAX_TURNS" \
+        "$(cat .prompts/coder.txt)" \
+        "${CODER_MODEL:-}" \
+        "Bash(npm install*),Bash(npm run *),Bash(npm test*),Bash(npm ci*),Bash(npx *),Bash(node *),Bash(git status*),Bash(git diff*),Read,Edit,Write,Glob,Grep"
     if [ $? -ne 0 ]; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Coder 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME

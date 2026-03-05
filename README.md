@@ -32,7 +32,7 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 
 ## ⚙️ 運作方式 (How it Works)
 
-本專案的核心驅動引擎是 `loop.sh`。它是一個自動化的 Bash 腳本，透過呼叫 `claude` CLI 來模擬團隊協作。
+本專案的核心驅動引擎是 `loop.sh`。它是一個自動化的 Bash 腳本，透過呼叫 LLM CLI（預設 `claude`，也支援 `gemini`）來模擬團隊協作。
 
 ### 🔄 開發迴圈流程
 1. **PM 規劃階段**：腳本載入 `.prompts/pm.txt` 喚醒 PM。PM 分析現狀、更新 `GOALS.md`，並產出 `CURRENT_TASK.md`。腳本自動將變更 `git commit`。
@@ -53,7 +53,7 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 
 ### 執行步驟：
 
-1. **配置環境**：確保你的環境已安裝 Node.js、Git 以及 `claude` 官方命令列工具，並已完成 API 驗證。
+1. **配置環境**：確保你的環境已安裝 Node.js、Git，以及你要使用的 CLI（`claude` 或 `gemini`），並已完成 API 驗證。
 2. **複製腳本**：將 `loop.sh` 複製或移動到專案資料夾的上一層目錄。
     ```bash
     cp loop.sh ../
@@ -67,3 +67,21 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
     ../loop.sh
     ```
 5. **觀察輸出**：放下一杯咖啡，看著終端機裡印出的時間戳記，享受自動化開發的成果！
+
+### 🤖 切換 LLM Provider（Claude / Gemini）
+
+`loop.sh` 預設使用 `claude`。若要改用 `gemini`，可在啟動前設定環境變數：
+
+```bash
+export LLM_PROVIDER=gemini
+../loop.sh
+```
+
+可選設定：
+
+- `PM_MODEL`：PM 階段模型名稱（例如 `gemini-2.5-pro`）。
+- `CODER_MODEL`：Coder 階段模型名稱。
+- `GEMINI_EXTRA_ARGS`：附加給 `gemini` 指令的額外參數（字串形式）。
+
+> 註：Gemini 模式目前不會顯示 Claude stream-json 的 turn 統計資訊。
+
