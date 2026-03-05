@@ -3,7 +3,18 @@
     "allow": [
       "Read",
       "Glob",
-      "Grep"
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash(npm install*)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm ci*)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
     ]
   }
 }

@@ -7,7 +7,7 @@ SLEEP_TIME=300
 ERROR_SLEEP_TIME=300
 
 # 定義 AI 卡住的判定門檻 (連續幾次沒有變更就視為卡住並跳出)
-STUCK_LIMIT=3 
+STUCK_LIMIT=3
 CONSECUTIVE_NO_CHANGES=0
 
 echo "🚀 開始啟動虛擬團隊 (PM & Coder) 自動開發迴圈..."
@@ -36,7 +36,7 @@ commit_changes() {
     local role=$1
     local default_msg=$2
     local commit_msg="$default_msg"
-    
+
     # 先讀取並移除 .commit_msg，避免被 git add . 加進去
     if [ -f ".commit_msg" ]; then
         commit_msg=$(cat .commit_msg)
@@ -44,7 +44,7 @@ commit_changes() {
     fi
 
     git add .
-    
+
     # 檢查是否有實際的檔案變動
     if ! git diff --cached --quiet; then
         git commit -m "$commit_msg"
@@ -55,9 +55,31 @@ commit_changes() {
     fi
 }
 
+# 檢查是否有 HUMAN_NEEDED.md，若有則暫停並通知人類
+check_human_needed() {
+    if [ -f "docs/HUMAN_NEEDED.md" ]; then
+        echo ""
+        echo "🆘 ============================================================"
+        echo "🆘 [$(date '+%Y-%m-%d %H:%M:%S')] AI 團隊請求人類協助！"
+        echo "🆘 請查看 docs/HUMAN_NEEDED.md 了解需要協助的內容："
+        echo "🆘 ============================================================"
+        echo ""
+        cat docs/HUMAN_NEEDED.md
+        echo ""
+        echo "🆘 ============================================================"
+        echo "🆘 自動開發迴圈已暫停。請解決上述問題後，"
+        echo "🆘 刪除 docs/HUMAN_NEEDED.md 再重新執行 loop.sh。"
+        echo "🆘 ============================================================"
+        exit 1
+    fi
+}
+
 while true; do
     echo "=================================================="
-    
+
+    # 每次迴圈開始前先檢查是否有待處理的人類協助請求
+    check_human_needed
+
     # 檢查是否所有目標都已完成 (docs/GOALS.md 中沒有 [TODO] 且沒有 [IN PROGRESS])
     if ! grep -q "\[TODO\]\|\[IN PROGRESS\]" docs/GOALS.md; then
         echo "🎉 [$(date '+%Y-%m-%d %H:%M:%S')] 偵測到 docs/GOALS.md 中的任務已全數完成！結束自動開發迴圈。"
@@ -65,19 +87,22 @@ while true; do
     fi
 
     prepare_clean_env
-    
+
     echo "👔 [PM] 正在讀取進度、維護計畫並指派下一個任務..."
     echo "⏱️ [PM 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
-    
+
     # 處理 PM 執行結果
-    if ! claude -p "$(cat .prompts/pm.txt)" --allowedTools "Read,Edit,Write" --model sonnet --max-turns 15; then
+    if ! claude -p "$(cat .prompts/pm.txt)" --allowedTools "Read,Edit,Write,Glob,Grep" --model sonnet --max-turns 15; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] PM 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
         continue
     fi
-    
+
     echo "⏱️ [PM 結束時間]: $(date '+%Y-%m-%d %H:%M:%S')"
-    
+
+    # PM 完成後檢查是否需要人類介入
+    check_human_needed
+
     # 執行 PM 的 Commit 並檢查是否有實質變更
     commit_changes "PM" "chore(pm): 更新計畫狀態與 CURRENT_TASK.md"
     if [ $? -eq 1 ]; then
@@ -91,25 +116,31 @@ while true; do
         echo "❌ [$(date '+%Y-%m-%d %H:%M:%S')] 偵測到連續 $STUCK_LIMIT 次沒有產生任何檔案變更，判定 AI 邏輯卡住，強制中斷迴圈！"
         break
     fi
-    
+
     echo "⏳ PM 工作完成，休息 ${SLEEP_TIME} 秒避免 API Rate Limit..."
     sleep $SLEEP_TIME
-    
+
     echo "=================================================="
     prepare_clean_env
-    
+
     echo "💻 [Coder] 正在讀取 CURRENT_TASK.md 並執行開發工作..."
     echo "⏱️ [Coder 開始時間]: $(date '+%Y-%m-%d %H:%M:%S')"
-    
+
     # 處理 Coder 執行結果
-    if ! claude -p "$(cat .prompts/coder.txt)" --allowedTools "Bash,Read,Edit,Write" --max-turns 25; then
+    # allowedTools 明確包含 npm/node/npx 相關 Bash 指令
+    if ! claude -p "$(cat .prompts/coder.txt)" \
+        --allowedTools "Bash(npm install*),Bash(npm run *),Bash(npm test*),Bash(npm ci*),Bash(npx *),Bash(node *),Bash(git status*),Bash(git diff*),Read,Edit,Write,Glob,Grep" \
+        --max-turns 30; then
         echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Coder 執行發生錯誤 (可能為 API 限制或網路中斷)。紀錄錯誤並等待 ${ERROR_SLEEP_TIME} 秒後進入下一輪..."
         sleep $ERROR_SLEEP_TIME
         continue
     fi
-    
+
     echo "⏱️ [Coder 結束時間]: $(date '+%Y-%m-%d %H:%M:%S')"
-    
+
+    # Coder 完成後檢查是否需要人類介入
+    check_human_needed
+
     # 執行 Coder 的 Commit 並檢查是否有實質變更
     commit_changes "Coder" "feat(coder): 實作指定任務與進度回報"
     if [ $? -eq 1 ]; then
@@ -123,7 +154,7 @@ while true; do
         echo "❌ [$(date '+%Y-%m-%d %H:%M:%S')] 偵測到連續 $STUCK_LIMIT 次沒有產生任何檔案變更，判定 AI 邏輯卡住，強制中斷迴圈！"
         break
     fi
-    
+
     echo "⏳ Coder 實作完成，休息 ${SLEEP_TIME} 秒避免 API Rate Limit..."
     sleep $SLEEP_TIME
 done
