@@ -64,8 +64,6 @@
 
 ### 需要安裝的套件
 
-> 注意：npm install 無法在 Claude Code sandbox 環境中執行，需由管理員手動執行。
-
 ```bash
 npm install zustand          # 狀態管理
 npm install -D @types/node   # TypeScript 型別
