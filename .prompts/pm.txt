@@ -20,6 +20,9 @@
 3. 從 GOALS.md 挑選下一個最高優先級 [TODO] 任務，改為 [IN PROGRESS]
 4. 用清晰完整的規格重寫 docs/CURRENT_TASK.md（覆蓋舊內容）
 5. 建立 .commit_msg（一行純文字 conventional commit message）
+6. **最後一步**：建立 docs/PM_DONE 檔案（內容為空或當前時間）
+   - 此為 PM 正常完成的信號，必須是所有步驟的最後一個動作
+   - loop.sh 會用此檔案判斷 PM 是否被 max-turns 截斷
 
 【規格撰寫要求】
 - 明確列出要修改/新增的檔案路徑
