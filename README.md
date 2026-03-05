@@ -17,15 +17,15 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 
 * **👑 人類管理員 (Admin - William)**
     * 負責高階決策與專案初始化。
-    * 定義 `docs/GOALS.md` 中的 Epic 與 Task 優先順序。
+    * 定義 `.ai/GOALS.md` 中的 Epic 與 Task 優先順序。
     * 啟動與監控自動化開發迴圈 (`loop.sh`)。
 * **👔 專案經理 (PM - Claude)**
     * **職責：** 規劃與管理，不寫程式碼。
-    * **行為：** 讀取 `docs/GOALS.md` 與程式碼變更，更新任務進度（標記 `[DONE]`），並挑選下一個優先任務。
-    * **產出：** 將詳細規格寫入 `docs/CURRENT_TASK.md` 供 Coder 執行，並產生 Commit 訊息。
+    * **行為：** 讀取 `.ai/GOALS.md` 與程式碼變更，更新任務進度（標記 `[DONE]`），並挑選下一個優先任務。
+    * **產出：** 將詳細規格寫入 `.ai/CURRENT_TASK.md` 供 Coder 執行，並產生 Commit 訊息。
 * **💻 軟體工程師 (Coder - Claude)**
     * **職責：** 執行任務與撰寫程式碼。
-    * **行為：** 讀取 `docs/CURRENT_TASK.md`，實作功能，處理錯誤並回報實作進度。
+    * **行為：** 讀取 `.ai/CURRENT_TASK.md`，實作功能，處理錯誤並回報實作進度。
     * **產出：** 遊戲源始碼檔案變更，以及產生對應的 Commit 訊息。
 
 ---
@@ -35,13 +35,13 @@ An experimental idle game built entirely by an autonomous AI Virtual Team.
 本專案的核心驅動引擎是 `loop.sh`。它是一個自動化的 Bash 腳本，透過呼叫 `claude` CLI 來模擬團隊協作。
 
 ### 🔄 開發迴圈流程
-1. **PM 規劃階段**：腳本載入 `.prompts/pm.txt` 喚醒 PM。PM 分析現狀、更新 `GOALS.md`，並產出 `CURRENT_TASK.md`。腳本自動將變更 `git commit`。
+1. **PM 規劃階段**：腳本載入 `.ai/prompts/pm.txt` 喚醒 PM。PM 分析現狀、更新 `.ai/GOALS.md`，並產出 `.ai/CURRENT_TASK.md`。腳本自動將變更 `git commit`。
 2. **冷卻休息**：暫停 5 分鐘（300 秒），避免觸發 API Rate Limit。
-3. **Coder 開發階段**：腳本載入 `.prompts/coder.txt` 喚醒 Coder。Coder 依照 `CURRENT_TASK.md` 寫 Code，並在文件底部加上實作回報。腳本自動將程式碼與文件 `git commit`。
+3. **Coder 開發階段**：腳本載入 `.ai/prompts/coder.txt` 喚醒 Coder。Coder 依照 `.ai/CURRENT_TASK.md` 寫 Code，並在文件底部加上實作回報。腳本自動將程式碼與文件 `git commit`。
 4. **冷卻休息**：再次暫停 5 分鐘，隨後進入下一個迴圈。
 
 ### 🛡️ 安全與中斷機制
-* **🎉 任務完成：** 當 `docs/GOALS.md` 內不再有 `[TODO]` 或 `[IN PROGRESS]` 標籤時，迴圈會自動判定專案完成並光榮結束。
+* **🎉 任務完成：** 當 `.ai/GOALS.md` 內不再有 `[TODO]` 或 `[IN PROGRESS]` 標籤時，迴圈會自動判定專案完成並光榮結束。
 * **⚠️ API 異常容錯：** 若遇到網路中斷或 API 額度耗盡，腳本會印出警告並暫停 60 秒後重試，不會直接崩潰。
 * **❌ 防卡死機制 (Anti-Stuck)：** 若 AI 陷入邏輯盲區，連續 3 次執行都沒有產生任何實質的檔案變更 (Git Diff 為空)，腳本會強制中斷迴圈，交由人類管理員介入處理。
 
