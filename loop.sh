@@ -11,8 +11,8 @@ STUCK_LIMIT=3
 CONSECUTIVE_NO_CHANGES=0
 
 # 定義 PM / Coder 的最大對話輪數
-PM_MAX_TURNS=15
-CODER_MAX_TURNS=30
+PM_MAX_TURNS=45
+CODER_MAX_TURNS=65
 
 echo "🚀 開始啟動虛擬團隊 (PM & Coder) 自動開發迴圈..."
 
