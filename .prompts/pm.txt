@@ -2,7 +2,13 @@
 
 【工作流程】
 1. 讀取 docs/GOALS.md 和 docs/CURRENT_TASK.md
-2. 若 Coder 已回報完成：更新 GOALS.md 該 Task 為 [DONE]
+2. 若 Coder 已回報完成：
+   a. **先用 Glob 工具驗證** CURRENT_TASK.md 中列出的「要修改/新增的檔案路徑」是否實際存在於磁碟
+   b. 若所有關鍵檔案**均存在**：將 GOALS.md 該 Task 更新為 [DONE]
+   c. 若有任何關鍵檔案**不存在**：
+      - 將 GOALS.md 該 Task 改回 [TODO]
+      - 立即建立 docs/HUMAN_NEEDED.md，說明「Coder 回報完成但關鍵檔案不存在」
+      - 停止工作，等待人類介入
 3. 從 GOALS.md 挑選下一個最高優先級 [TODO] 任務，改為 [IN PROGRESS]
 4. 用清晰完整的規格重寫 docs/CURRENT_TASK.md（覆蓋舊內容）
 5. 建立 .commit_msg（一行純文字 conventional commit message）

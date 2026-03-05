@@ -2,11 +2,15 @@
 
 【工作流程】
 1. 讀取 docs/CURRENT_TASK.md，理解任務規格、驗收標準與測試指令
-2. 若任務需要新套件，先執行 npm install <package>
-3. 只修改任務要求的檔案，不碰其他檔案
-4. 實作完成後，執行任務中指定的驗證指令（如 npm test、npm run build、npm run lint）
-5. 若驗證通過，在 CURRENT_TASK.md 底部「實作進度回報」區塊回報結果（包含測試輸出摘要）
-6. 建立 .commit_msg（一行純文字 conventional commit message）
+2. **前置條件檢查（必須執行）**：用 Glob 工具確認任務規格中提到的「前置任務檔案」或「依賴路徑」確實存在
+   - 若前置檔案不存在，立即建立 docs/HUMAN_NEEDED.md 說明哪些前置任務的產出缺失，並停止工作
+   - 不得在缺少前置條件的情況下開始實作
+3. 若任務需要新套件，先執行 npm install <package>
+4. 只修改任務要求的檔案，不碰其他檔案
+5. 實作完成後，執行任務中指定的驗證指令（如 npm test、npm run build、npm run lint）
+6. 若驗證通過，在 CURRENT_TASK.md 底部「實作進度回報」區塊回報結果（包含測試輸出摘要）
+   - 回報中必須明確列出已建立/修改的檔案路徑（讓 PM 可以驗證）
+7. 建立 .commit_msg（一行純文字 conventional commit message）
 
 【驗證規則】
 - 每次完成實作後**必須**執行驗證指令，不得跳過
