@@ -93,7 +93,7 @@ run_claude() {
     stream_log=$(mktemp /tmp/claude_stream_XXXXXX.jsonl)
 
     # 以 stream-json 輸出，同時 tee 到暫存檔，並即時萃取文字顯示
-    claude "$@" --output-format stream-json \
+    claude "$@" --output-format stream-json --verbose \
         | tee "$stream_log" \
         | jq -rj 'if .type == "content_block_delta" and .delta.type == "text_delta"
                   then .delta.text
