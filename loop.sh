@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定義虛擬成員工作後的休息時間 (單位: 秒)
-SLEEP_TIME=300
+SLEEP_TIME=600
 
 # 定義遭遇 API 錯誤或網路中斷時的重試等待時間 (單位: 秒)
 ERROR_SLEEP_TIME=300
