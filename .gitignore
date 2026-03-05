@@ -1,2 +1,7 @@
 .claude/worktrees/
 .commit_msg
+
+# npm sandbox 重導向目錄（由 .npmrc prefix/cache 設定產生）
+.npm-global/
+.npm-cache/
+node_modules/

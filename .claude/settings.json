@@ -3,7 +3,31 @@
     "allow": [
       "Read",
       "Glob",
-      "Grep"
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash(npm install*)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm ci*)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Bash(npm install -g*)",
+      "Bash(npm install --global*)",
+      "Bash(npm i -g*)",
+      "Bash(npm i --global*)",
+      "Bash(npm uninstall -g*)",
+      "Bash(npm uninstall --global*)",
+      "Bash(npm remove -g*)",
+      "Bash(npm config set*)",
+      "Bash(npm config delete*)",
+      "Bash(npm set*)",
+      "Bash(npm link*)"
     ]
   }
 }
