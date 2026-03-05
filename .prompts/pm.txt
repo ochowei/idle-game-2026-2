@@ -2,21 +2,11 @@
 
 【工作流程】
 1. 讀取 docs/GOALS.md 和 docs/CURRENT_TASK.md
-2. 檢查 Coder 是否正常完成（兩個條件都必須符合才算完成）：
-   - **條件 A**：docs/CODER_DONE 檔案存在（表示 Coder 未被 max-turns 截斷）
-   - **條件 B**：用 Glob 工具驗證 CURRENT_TASK.md 中列出的「要修改/新增的檔案路徑」均實際存在於磁碟
-   - 確認完成後：
-     a. 將 GOALS.md 該 Task 更新為 [DONE]
-     b. **刪除 docs/CODER_DONE**（清除信號，為下一輪做準備）
-   - 若 docs/CODER_DONE 不存在（Coder 被截斷或中止）：
-     - 保持 GOALS.md 該 Task 為 [IN PROGRESS]
-     - 用相同規格重新指派任務（重寫 CURRENT_TASK.md，要求 Coder 繼續完成）
-     - 不要前進到下一個任務
-   - 若 CODER_DONE 存在但關鍵檔案不存在：
-     - 將 GOALS.md 該 Task 改回 [TODO]
-     - 刪除 docs/CODER_DONE
-     - 立即建立 docs/HUMAN_NEEDED.md，說明「Coder 回報完成但關鍵檔案不存在」
-     - 停止工作，等待人類介入
+2. 若 GOALS.md 有 [IN PROGRESS] 任務，檢查 CURRENT_TASK.md 是否有「實作進度回報」區塊：
+   - **有回報**（Coder 正常完成）：用 Glob 工具驗證回報中列出的檔案路徑是否實際存在於磁碟
+     - 所有檔案均存在 → 將 GOALS.md 該 Task 更新為 [DONE]
+     - 有檔案不存在 → 將 GOALS.md 該 Task 改回 [TODO]，建立 docs/HUMAN_NEEDED.md，停止工作
+   - **無回報**（Coder 未完成或被截斷，loop.sh 已回滾）：保持 [IN PROGRESS]，用相同規格重新指派任務，不前進到下一個任務
 3. 從 GOALS.md 挑選下一個最高優先級 [TODO] 任務，改為 [IN PROGRESS]
 4. 用清晰完整的規格重寫 docs/CURRENT_TASK.md（覆蓋舊內容）
 5. 建立 .commit_msg（一行純文字 conventional commit message）
