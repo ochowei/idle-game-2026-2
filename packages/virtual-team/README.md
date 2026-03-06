@@ -1,4 +1,4 @@
-# @anthropic/virtual-team
+# @william9527/virtual-team
 
 AI-driven virtual team framework — automate software development with PM and Coder agents powered by Claude CLI.
 
@@ -21,7 +21,7 @@ The loop continues automatically until all tasks are complete, with safety mecha
 
 ```bash
 # Install
-npm install -g @anthropic/virtual-team
+npm install -g @william9527/virtual-team
 
 # Initialise in your project
 cd my-project
@@ -89,7 +89,7 @@ Edit `.virtual-team/config.json`:
 ## Programmatic API
 
 ```js
-import { loadConfig, startLoop, initVirtualTeam } from '@anthropic/virtual-team';
+import { loadConfig, startLoop, initVirtualTeam } from '@william9527/virtual-team';
 
 // Initialise
 initVirtualTeam('/path/to/project');
