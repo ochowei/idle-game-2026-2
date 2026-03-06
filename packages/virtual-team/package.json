@@ -1,0 +1,36 @@
+{
+  "name": "@anthropic/virtual-team",
+  "version": "0.1.0",
+  "description": "AI-driven virtual team framework — automate software development with PM and Coder agents powered by Claude CLI",
+  "keywords": [
+    "ai",
+    "automation",
+    "claude",
+    "virtual-team",
+    "development",
+    "orchestration",
+    "pm",
+    "coder"
+  ],
+  "license": "MIT",
+  "bin": {
+    "virtual-team": "./bin/cli.mjs"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "prompts/",
+    "templates/"
+  ],
+  "scripts": {
+    "test": "node --test lib/**/*.test.mjs",
+    "lint": "echo 'no linter configured'"
+  }
+}
