@@ -42,8 +42,13 @@ async function main() {
         result.skipped.forEach((f) => console.log(`  - ${f}`));
       }
 
-      console.log('\nDone! Edit .virtual-team/GOALS.md to define your tasks, then run:');
-      console.log('  virtual-team start');
+      console.log('\nDone! Files are in .virtual-team/ (not .claude/).');
+      console.log('\nPrerequisites:');
+      console.log('  1. Install Claude CLI: npm install -g @anthropic-ai/claude-code');
+      console.log('  2. Authenticate: claude login');
+      console.log('\nNext steps:');
+      console.log('  1. Edit .virtual-team/GOALS.md to define your tasks');
+      console.log('  2. Run: virtual-team start');
       break;
     }
 

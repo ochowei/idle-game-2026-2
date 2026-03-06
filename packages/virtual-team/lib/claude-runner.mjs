@@ -1,4 +1,23 @@
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
+
+/**
+ * Check if the `claude` CLI is available in PATH.
+ * @returns {{ available: boolean, version?: string, error?: string }}
+ */
+export function checkClaudeCli() {
+  try {
+    const version = execFileSync('claude', ['--version'], {
+      encoding: 'utf-8',
+      timeout: 5000,
+    }).trim();
+    return { available: true, version };
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return { available: false, error: 'claude CLI not found in PATH. Install it with: npm install -g @anthropic-ai/claude-code' };
+    }
+    return { available: false, error: `claude CLI check failed: ${err.message}` };
+  }
+}
 
 /**
  * Run the `claude` CLI with the given arguments and stream output to stdout.
@@ -55,6 +74,17 @@ export function runClaude({ role, prompt, allowedTools, maxTurns, model, cwd }) 
           // Stream text deltas to stdout
           if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
             process.stdout.write(event.delta.text);
+          }
+
+          // Show tool use so the user can see progress
+          if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
+            const toolName = event.content_block.name || 'unknown';
+            process.stdout.write(`\n  [${role}] 🔧 Using tool: ${toolName}\n`);
+          }
+
+          // Show tool results briefly
+          if (event.type === 'result' && event.subtype === 'tool_result') {
+            process.stdout.write(`  [${role}] ✓ Tool completed\n`);
           }
 
           // Capture turn count from result event

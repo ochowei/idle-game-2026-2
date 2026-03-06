@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { SignalManager } from './signals.mjs';
 import { ensureGitRepo, cleanWorkingTree, commitChanges } from './git.mjs';
 import { runPM, runCoder } from './agents.mjs';
+import { checkClaudeCli } from './claude-runner.mjs';
 
 function sleep(seconds) {
   return new Promise((r) => setTimeout(r, seconds * 1000));
@@ -30,6 +31,16 @@ export async function startLoop(config, options = {}) {
   const signals = new SignalManager(projectRoot, config.teamDir);
 
   if (!dryRun) {
+    // Pre-flight check: ensure claude CLI is available
+    const cliCheck = checkClaudeCli();
+    if (!cliCheck.available) {
+      console.error(`\n[ERROR] ${cliCheck.error}`);
+      console.error('The virtual-team package requires the Claude CLI to be installed and authenticated.');
+      console.error('See: https://docs.anthropic.com/en/docs/claude-code\n');
+      return { status: 'error', cycles: 0 };
+    }
+    console.log(`[INFO] Claude CLI detected: ${cliCheck.version}`);
+
     ensureGitRepo(projectRoot);
   }
 
